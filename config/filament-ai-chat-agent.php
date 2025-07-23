@@ -25,6 +25,34 @@ return [
                 'frequency_penalty' => 0.0,
                 'presence_penalty' => 0.0,
             ],
+            'functions' => [
+                [
+                    'name' => 'getTodayPosts',
+                    'description' => 'Get statistics for blog posts created today.',
+                    'parameters' => ['type' => 'object', 'properties' => []],
+                ],
+                [
+                    'name' => 'getYesterdayPosts',
+                    'description' => 'Get statistics for blog posts created yesterday.',
+                    'parameters' => ['type' => 'object', 'properties' => []],
+                ],
+                [
+                    'name' => 'getUserPosts',
+                    'description' => 'Get statistics for blog posts by a specific user.',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'username' => ['type' => 'string', 'description' => 'The name of the user'],
+                        ],
+                        'required' => ['username'],
+                    ],
+                ],
+                [
+                    'name' => 'getMostViewedPost',
+                    'description' => 'Get the most viewed blog post.',
+                    'parameters' => ['type' => 'object', 'properties' => []],
+                ],
+            ],
         ],
 
         'gemini' => [

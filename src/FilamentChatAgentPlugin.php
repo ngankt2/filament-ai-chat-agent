@@ -5,6 +5,9 @@ namespace Ngankt2\FilamentChatAgent;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Closure;
+use Ngankt2\FilamentChatAgent\Actions\AiFunctionAction;
+use Ngankt2\FilamentChatAgent\Models\ChatQuestionTemplate;
+use OpenAI;
 
 class FilamentChatAgentPlugin implements Plugin
 {
@@ -18,6 +21,7 @@ class FilamentChatAgentPlugin implements Plugin
     protected int|Closure|null $maxTokens = null;
     protected string|Closure $systemMessage = '';
     protected array|Closure $functions = [];
+    protected array $actions = [];
     protected bool|Closure|null $pageWatcherEnabled = false;
     protected string|Closure $pageWatcherSelector = '.fi-page';
     protected string|Closure|null $pageWatcherMessage = null;
@@ -199,7 +203,7 @@ class FilamentChatAgentPlugin implements Plugin
         return $this;
     }
 
-    public function getFunctions(): array
+    public function _getFunctions(): array
     {
         return $this->functions;
     }
@@ -303,4 +307,73 @@ class FilamentChatAgentPlugin implements Plugin
 
         return $this->logoUrl;
     }
+
+    /**
+     * Register a new AI function action.
+     *
+     * @param string $actionClass The fully qualified class name of the action
+     * @return static
+     */
+    public function registerAction(string $actionClass): static
+    {
+        if (is_subclass_of($actionClass, AiFunctionAction::class)) {
+            $this->actions[] = $actionClass;
+        }
+        return $this;
+    }
+
+    /**
+     * Get all registered actions.
+     *
+     * @return array
+     */
+    public function getActions(): array
+    {
+        return $this->actions;
+    }
+
+    /**
+     * Get all function definitions for OpenAI API.
+     *
+     * @return array
+     */
+    public function getFunctions(): array
+    {
+        return collect($this->actions)->map(function ($actionClass) {
+            return (new $actionClass())->getFunctionDefinition();
+        })->toArray();
+    }
+
+
+    /**
+     * Generate embeddings for all questions associated with registered actions.
+     */
+    public function generateQuestionEmbeddings(): self
+    {
+        return $this;
+        $client = OpenAI::factory()
+            ->withApiKey(config('filament-ai-chat-agent.providers.openai.api_key'))
+            ->withBaseUri(config('filament-ai-chat-agent.providers.openai.base_url'))
+            ->make();
+
+        foreach ($this->actions as $actionClass) {
+            $action = new $actionClass();
+            foreach ($action->getQuestions() as $questionData) {
+                $response = $client->embeddings()->create([
+                    'model' => 'text-embedding-ada-002',
+                    'input' => $questionData['question'],
+                ]);
+
+                ChatQuestionTemplate::updateOrCreate(
+                    ['question' => $questionData['question']],
+                    [
+                        'embedding' => $response->embeddings[0]->embedding,
+                        'function_name' => $action->getFunctionName(),
+                    ]
+                );
+            }
+        }
+        return $this;
+    }
+
 }

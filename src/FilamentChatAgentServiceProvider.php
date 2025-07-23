@@ -10,15 +10,11 @@ class FilamentChatAgentServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('filament-ai-chat-agent')
-            ->hasConfigFile('filament-ai-chat-agent') // <--- Đăng ký file config: config/filament-ai-chat-agent.php
+            ->hasConfigFile('filament-ai-chat-agent')
             ->hasTranslations()
+            ->hasMigration('01-create-chat-agent-question')
             ->hasViews();
     }
 
@@ -29,7 +25,6 @@ class FilamentChatAgentServiceProvider extends PackageServiceProvider
     {
         Livewire::component('fi-ai-chat-agent', ChatAgentComponent::class);
 
-        // Đăng ký publish thủ công nếu dùng custom paths
         $this->publishes([
             __DIR__ . '/../config/filament-ai-chat-agent.php' => config_path('filament-ai-chat-agent.php'),
         ], 'filament-ai-chat-agent-config');
@@ -37,6 +32,13 @@ class FilamentChatAgentServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__ . '/../resources/lang' => resource_path('lang/vendor/filament-ai-chat-agent'),
         ], 'filament-ai-chat-agent-translations');
+    }
+
+    public function boot(): void
+    {
+        parent::boot();
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
     }
 
 }
