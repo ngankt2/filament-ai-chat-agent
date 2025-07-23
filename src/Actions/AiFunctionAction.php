@@ -21,6 +21,8 @@ abstract class AiFunctionAction
      */
     abstract public function getQuestions(): array;
 
+    abstract public function getParametersSchema(): array;
+
     /**
      * Get the function definition for OpenAI API.
      *
@@ -53,15 +55,5 @@ abstract class AiFunctionAction
     public function getDescription(): string
     {
         return 'Retrieve data or statistics for ' . class_basename(static::class);
-    }
-
-    /**
-     * Get the parameters schema for the function.
-     *
-     * @return array
-     */
-    public function getParametersSchema(): array
-    {
-        return ['type' => 'object', 'properties' => []];
     }
 }

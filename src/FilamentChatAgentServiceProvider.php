@@ -14,7 +14,7 @@ class FilamentChatAgentServiceProvider extends PackageServiceProvider
             ->name('filament-ai-chat-agent')
             ->hasConfigFile('filament-ai-chat-agent')
             ->hasTranslations()
-            ->hasMigration('01-create-chat-agent-question')
+            ->hasMigration('01_create_chat_agent_question')
             ->hasViews();
     }
 

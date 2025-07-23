@@ -350,7 +350,6 @@ class FilamentChatAgentPlugin implements Plugin
      */
     public function generateQuestionEmbeddings(): self
     {
-        return $this;
         $client = OpenAI::factory()
             ->withApiKey(config('filament-ai-chat-agent.providers.openai.api_key'))
             ->withBaseUri(config('filament-ai-chat-agent.providers.openai.base_url'))
