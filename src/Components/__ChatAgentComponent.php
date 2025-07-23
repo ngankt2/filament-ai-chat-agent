@@ -10,38 +10,23 @@ use Livewire\Component;
 use Ngankt2\FilamentChatAgent\Actions\AiFunctionAction;
 use Illuminate\Support\Facades\Cache;
 
-class ChatAgentComponent extends Component
+class __ChatAgentComponent extends Component
 {
-
     public string $name;
-
     public string $buttonText;
-
     public string $buttonIcon;
-
     public string $sendingText;
-
     public array $messages;
-
     #[Session]
     public string $question;
-
     public string $questionContext;
-
     public string $pageWatcherEnabled;
-
     public string $pageWatcherSelector;
-
     public string $winWidth;
-
     public string $winPosition;
-
     public bool $showPositionBtn;
-
     public bool $panelHidden;
-
     public string|bool $logoUrl;
-
     private string $sessionKey;
 
     public function __construct()
@@ -91,43 +76,10 @@ class ChatAgentComponent extends Component
         $this->dispatch('sendmessage', ['message' => $this->question]);
     }
 
-    public function changeWinWidth(): void
-    {
-        if ($this->winWidth == "width:" . filament('filament-ai-chat-agent')->getDefaultPanelWidth() . ";") {
-            $this->winWidth = "width:100%;";
-            $this->showPositionBtn = false;
-        } else {
-            $this->winWidth = "width:" . filament('filament-ai-chat-agent')->getDefaultPanelWidth() . ";";
-            $this->showPositionBtn = true;
-        }
-    }
 
-    public function changeWinPosition(): void
-    {
-        if ($this->winPosition != "left") {
-            $this->winPosition = "left";
-        } else {
-            $this->winPosition = "";
-        }
-        session([$this->sessionKey . '-winPosition' => $this->winPosition]);
-    }
-
-    public function resetSession(): void
-    {
-        request()->session()->forget($this->sessionKey);
-        $this->messages = $this->getDefaultMessages();
-    }
-
-    public function togglePanel(): void
-    {
-        $this->panelHidden = !$this->panelHidden;
-        session([$this->sessionKey . '-panelHidden' => $this->panelHidden]);
-    }
 
     protected function chat(): void
     {
-
-
         $provider = config('filament-ai-chat-agent.default', 'openai');
         $config = config("filament-ai-chat-agent.providers.{$provider}");
 
@@ -138,7 +90,7 @@ class ChatAgentComponent extends Component
                 'timeout' => $config['timeout'] ?? 45,
             ]))
             ->make();
-        //dd($config['functions']);;
+
         // Step 1: gọi lần đầu để hỏi ý định
         $response = $client->chat()->create([
             'model' => $config['model'],
@@ -159,7 +111,6 @@ class ChatAgentComponent extends Component
         $choice = $response['choices'][0];
         $messages = $response['messages'] ?? [];
 
-
         // Step 2: GPT chọn gọi function
         if (
             isset($choice['finish_reason']) &&
@@ -169,9 +120,8 @@ class ChatAgentComponent extends Component
             $arguments = json_decode($choice['message']['function_call']['arguments'], true);
 
             // Step 3: map function name => AiFunctionAction class
-            $actionClass = collect(filament('filament-ai-chat-agent')->getActions())
+            $actionClass = collect(config("filament-ai-chat-agent.actions", []))
                 ->first(fn ($class) => class_basename($class) === $functionName);
-
 
             if ($actionClass && is_subclass_of($actionClass, AiFunctionAction::class)) {
                 /** @var AiFunctionAction $action */
@@ -214,6 +164,7 @@ class ChatAgentComponent extends Component
 
         session()->put($this->sessionKey, $this->messages);
     }
+
 
     protected function getDefaultMessages(): array
     {
