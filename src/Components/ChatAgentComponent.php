@@ -81,6 +81,10 @@ class ChatAgentComponent extends Component
             $this->question = "";
             return;
         }
+        $this->messages[] =  [
+            'role' => 'system',
+            'content' => 'Bạn là trợ lý AI phân tích câu hỏi người dùng và xác định ý định (intent) dựa trên các chức năng có sẵn. Trả về ý định và tham số tương ứng bằng cách gọi function phù hợp. Nếu không khớp với function nào, trả về null cho intent.',
+        ];
         $this->messages[] = [
             "role" => 'user',
             "content" => $this->question,
@@ -142,22 +146,12 @@ class ChatAgentComponent extends Component
         // Step 1: gọi lần đầu để hỏi ý định
         $response = $client->chat()->create([
             'model' => $config['model'],
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Bạn là trợ lý AI phân tích câu hỏi người dùng và xác định ý định (intent) dựa trên các chức năng có sẵn. Trả về ý định và tham số tương ứng bằng cách gọi function phù hợp. Nếu không khớp với function nào, trả về null cho intent.',
-                ],
-                [
-                    'role' => 'user',
-                    'content' => 'Nhân viên A là ai',
-                ],
-            ],
+            'messages' => $this->messages,
             'functions' => $config['functions'],
             'function_call' => 'auto',
         ]);
 
         $choice = $response['choices'][0];
-        $messages = $response['messages'] ?? [];
 
 
         // Step 2: GPT chọn gọi function
@@ -182,13 +176,10 @@ class ChatAgentComponent extends Component
                 $finalResponse = $client->chat()->create([
                     'model' => $config['model'],
                     'messages' => [
+                        ...$this->messages,
                         [
                             'role' => 'system',
                             'content' => 'Dựa vào dữ liệu bên dưới, hãy trả lời người dùng một cách tự nhiên, lịch sự, rõ ràng và chi tiết nhất có thể.',
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => 'Nhân viên A là ai',
                         ],
                         [
                             'role' => 'function',
